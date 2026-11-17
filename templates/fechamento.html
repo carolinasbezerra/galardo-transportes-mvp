@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galardo Transportes 24h - Fecho Diário</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #121212; color: #f8f9fa; }
+        .form-control, .form-select { min-height: 48px; background-color: #2b2b2b; color: #fff; border: 1px solid #555; }
+        .form-control:focus, .form-select:focus { background-color: #2b2b2b; color: #fff; border-color: #ffc107; box-shadow: none; }
+        .btn-custom { min-height: 48px; font-size: 1.1rem; font-weight: bold; }
+    </style>
+</head>
+<body class="py-4">
+    <div class="container" style="max-width: 600px;">
+        <div class="mb-3">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-custom px-4">&larr; Voltar ao Menu</a>
+        </div>
+
+        <h1 class="h4 text-warning mb-4">Registo de Fecho Diário Noturno</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} mb-3" role="alert">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="mb-3">
+                <label for="profissional_id" class="form-label text-light fw-bold">Profissional / Veículo</label>
+                <select class="form-select" id="profissional_id" name="profissional_id" required>
+                    <option value="" disabled selected>Selecione o profissional...</option>
+                    {% for prof in profissionais %}
+                    <option value="{{ prof.id }}">{{ prof.nome }} — {{ prof.veiculo }} ({{ prof.vinculo }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="valor_bruto" class="form-label text-light fw-bold">Valor Bruto das Corridas (R$)</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="valor_bruto" name="valor_bruto" inputmode="decimal" required placeholder="0.00">
+            </div>
+
+            <div class="mb-3">
+                <label for="combustivel" class="form-label text-light fw-bold">Gasto com Combustível (R$)</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="combustivel" name="combustivel" inputmode="decimal" value="0.00" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="despesas_extras" class="form-label text-light fw-bold">Despesas Extras / Pedágio (R$)</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="despesas_extras" name="despesas_extras" inputmode="decimal" value="0.00" required>
+            </div>
+
+            <div class="mb-4">
+                <label for="observacao" class="form-label text-light fw-bold">Observações do Turno</label>
+                <input type="text" class="form-control" id="observacao" name="observacao" placeholder="Ex: Pedágio via expressa">
+            </div>
+
+            <button type="submit" class="btn btn-warning w-100 btn-custom text-dark">Calcular e Gravar Fecho</button>
+        </form>
+    </div>
+</body>
+</html>
