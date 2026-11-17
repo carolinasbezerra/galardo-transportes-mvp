@@ -3,7 +3,6 @@ from decimal import Decimal
 import os
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get(
@@ -17,12 +16,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
-# Modelos de Dados (SQLAlchemy)
 class Profissional(db.Model):
   __tablename__ = 'profissional'
   id = db.Column(db.Integer, primary_key=True)
   nome = db.Column(db.String(100), nullable=False)
-  vinculo = db.Column(db.String(50), nullable=False)  # Contratado ou Socio
+  vinculo = db.Column(db.String(50), nullable=False)
   percentual_comissao = db.Column(db.Numeric(5, 2), default=30.00)
   veiculo = db.Column(db.String(50), nullable=False)
   fechamentos = db.relationship(
@@ -35,7 +33,7 @@ class FechamentoDiario(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   data_fechamento = db.Column(db.Date, nullable=False, default=datetime.utcnow)
   profissional_id = db.Column(
-      db.Integer, db.foreign_key('profissional.id'), nullable=False
+      db.Integer, db.ForeignKey('profissional.id'), nullable=False
   )
   valor_bruto = db.Column(db.Numeric(10, 2), nullable=False)
   combustivel = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
@@ -49,7 +47,6 @@ with app.app_context():
   db.create_all()
 
 
-# Rotas do MVP (MVC)
 @app.route('/')
 def index():
   profissionais = Profissional.query.all()
@@ -73,14 +70,12 @@ def fechamento():
         )
         return redirect(url_for('fechamento'))
 
-      prof = Profissional.query.get_or_404(prof_id)
+      prof = db.session.get(Profissional, prof_id)
 
-      # Regra de Negocio: Contratado = 30% bruto sem desconto; Socio = rateio 50% custos
       if prof.vinculo == 'Contratado':
         repasse = bruto * (prof.percentual_comissao / Decimal('100'))
         saldo = bruto - repasse
       else:
-        # Socio: divide 50% de combustivel e extras
         total_despesas = comb + extras
         rateio_despesas = total_despesas / Decimal('2')
         repasse = rateio_despesas
@@ -99,8 +94,8 @@ def fechamento():
       db.session.commit()
 
       flash(
-          f'Fecho gravado com sucesso! Repasse: R$ {repasse:.2f} | Saldo Empresa:'
-          f' R$ {saldo:.2f}',
+          f'Fecho gravado com sucesso! Repasse: R$ {repasse:.2f} | Saldo'
+          f' Empresa: R$ {saldo:.2f}',
           'success',
       )
       return redirect(url_for('historico'))
